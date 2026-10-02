@@ -1,6 +1,7 @@
 import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import type { Relation } from 'typeorm';
 import { User } from '../users/user.entity.js';
+import { Prescription } from '../prescriptions/prescription.entity.js';
 import { Product } from '../products/product.entity.js';
 import { ProductVariant } from '../products/product-variant.entity.js';
 
@@ -20,6 +21,13 @@ export class CartItem {
   @ManyToOne(() => ProductVariant, { eager: true, nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'variant_id' })
   variant: Relation<ProductVariant> | null;
+
+  @ManyToOne(() => Prescription, { eager: true, nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'prescription_id' })
+  prescription: Relation<Prescription> | null;
+
+  @Column({ name: 'lens_type', type: 'varchar', nullable: true })
+  lensType: string | null;
 
   @Column({ type: 'int', default: 1 })
   quantity: number;

@@ -29,6 +29,12 @@ export class OrderItem {
   @Column({ name: 'variant_id', type: 'uuid', nullable: true })
   variantId: string | null;
 
+  @Column({ name: 'lens_type', type: 'varchar', nullable: true })
+  lensType: string | null;
+
+  @Column({ type: 'jsonb', nullable: true })
+  prescription: Record<string, unknown> | null;
+
   @Column({ name: 'unit_price', type: 'decimal', precision: 12, scale: 2 })
   unitPrice: number;
 

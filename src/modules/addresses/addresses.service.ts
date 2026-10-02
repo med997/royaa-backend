@@ -9,7 +9,7 @@ export class AddressesService {
   constructor(@InjectRepository(Address) private readonly repo: Repository<Address>) {}
 
   private toDto(address: Address) {
-    return { id: address.id, label: address.label, line1: address.line1, city: address.city, isDefault: address.isDefault };
+    return { id: address.id, label: address.label, line1: address.line1, city: address.city, recipientName: address.recipientName, recipientPhone: address.recipientPhone, district: address.district, notes: address.notes, latitude: address.latitude, longitude: address.longitude, isDefault: address.isDefault };
   }
 
   async findAll(userId: string) {

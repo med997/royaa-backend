@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import type { Relation } from 'typeorm';
 import { Category } from '../categories/category.entity.js';
 import { Brand } from '../brands/brand.entity.js';
@@ -24,6 +24,51 @@ export class Product {
 
   @Column({ name: 'base_price_minor_units', type: 'int' })
   basePriceMinorUnits: number;
+
+  @Column({ name: 'compare_at_price_minor_units', type: 'int', nullable: true })
+  compareAtPriceMinorUnits: number | null;
+
+  @Column({ type: 'varchar', nullable: true, unique: true })
+  sku: string | null;
+
+  @Column({ name: 'model_3d_url', type: 'varchar', nullable: true })
+  model3dUrl: string | null;
+
+  @Column({ name: 'model_asset_id', type: 'uuid', nullable: true })
+  modelAssetId: string | null;
+
+  @Column({ name: 'model_usdz_url', type: 'varchar', nullable: true })
+  modelUsdzUrl: string | null;
+
+  @Column({ name: 'model_poster_url', type: 'varchar', nullable: true })
+  modelPosterUrl: string | null;
+
+  @Column({ name: 'view_360_images', type: 'jsonb', default: () => "'[]'" })
+  view360Images: string[];
+
+  @Column({ type: 'varchar', nullable: true })
+  shape: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  material: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  gender: string | null;
+
+  @Column({ name: 'frame_type', type: 'varchar', nullable: true })
+  frameType: string | null;
+
+  @Column({ name: 'is_featured', default: false })
+  isFeatured: boolean;
+
+  @Column({ name: 'is_new', default: false })
+  isNew: boolean;
+
+  @Column({ name: 'is_best_seller', default: false })
+  isBestSeller: boolean;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
 
   @Column({ name: 'width_mm', type: 'int', nullable: true })
   widthMm: number | null;

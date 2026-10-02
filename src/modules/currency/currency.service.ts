@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { BadRequestException, Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Currency } from './currency.entity.js';
@@ -22,9 +22,17 @@ export class CurrencyService implements OnModuleInit {
     return this.repo.find({ where: { isActive: true }, order: { code: 'ASC' } });
   }
 
+  private async rate(code: string) {
+    const currency = await this.repo.findOne({ where: { code, isActive: true } });
+    if (!currency) throw new BadRequestException(`Unknown currency: ${code}`);
+    return Number(currency.rateToBase);
+  }
+
   async convertFromBaseMinorUnits(baseMinorUnits: number, targetCode: string) {
-    const currency = await this.repo.findOne({ where: { code: targetCode, isActive: true } });
-    if (!currency) throw new Error(`Unknown currency: ${targetCode}`);
-    return Math.round((baseMinorUnits / 100) * Number(currency.rateToBase) * 100) / 100;
+    return Math.round((baseMinorUnits / 100) * (await this.rate(targetCode)) * 100) / 100;
+  }
+
+  async toBaseMinorUnits(amount: number, code: string) {
+    return Math.round((amount / (await this.rate(code))) * 100);
   }
 }

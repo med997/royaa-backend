@@ -5,6 +5,7 @@ import { UsersModule } from '../users/users.module.js';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
 import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
+import { AdminGuard } from './guards/admin.guard.js';
 
 const jwtModule = JwtModule.registerAsync({
   imports: [ConfigModule],
@@ -18,7 +19,7 @@ const jwtModule = JwtModule.registerAsync({
 @Module({
   imports: [UsersModule, jwtModule],
   controllers: [AuthController],
-  providers: [AuthService, JwtAuthGuard],
-  exports: [JwtAuthGuard, jwtModule],
+  providers: [AuthService, JwtAuthGuard, AdminGuard],
+  exports: [AuthService, JwtAuthGuard, AdminGuard, jwtModule, UsersModule],
 })
 export class AuthModule {}

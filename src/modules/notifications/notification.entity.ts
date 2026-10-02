@@ -20,6 +20,15 @@ export class Notification {
   @Column()
   body: string;
 
+  @Column({ name: 'title_ar', type: 'varchar', nullable: true })
+  titleAr: string | null;
+
+  @Column({ name: 'body_ar', type: 'varchar', nullable: true })
+  bodyAr: string | null;
+
+  @Column({ name: 'order_id', type: 'uuid', nullable: true })
+  orderId: string | null;
+
   @Column({ name: 'is_read', default: false })
   isRead: boolean;
 

@@ -1,12 +1,13 @@
 import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ILike, In, Repository } from 'typeorm';
+import { Between, FindOptionsOrder, FindOptionsWhere, ILike, In, Repository } from 'typeorm';
 import { Product } from './product.entity.js';
 import { CurrencyService } from '../currency/currency.service.js';
 import { CategoriesService } from '../categories/categories.service.js';
 import { BrandsService } from '../brands/brands.service.js';
 import { FindProductsDto } from './dto/find-products.dto.js';
+import { Paged, pageOpts } from '../../common/pagination.js';
 
 @Injectable()
 export class ProductsService implements OnModuleInit {
@@ -31,6 +32,14 @@ export class ProductsService implements OnModuleInit {
         nameAr: 'إطار Arc One',
         nameEn: 'Arc One',
         basePriceMinorUnits: 4800,
+        compareAtPriceMinorUnits: 6000,
+        sku: 'ARC-001',
+        shape: 'rectangle',
+        material: 'acetate',
+        gender: 'unisex',
+        frameType: 'full-rim',
+        isFeatured: true,
+        isNew: true,
         widthMm: 138,
         bridgeMm: 18,
         armMm: 145,
@@ -48,6 +57,12 @@ export class ProductsService implements OnModuleInit {
         nameAr: 'Terra Round',
         nameEn: 'Terra Round',
         basePriceMinorUnits: 5900,
+        sku: 'TRR-001',
+        shape: 'round',
+        material: 'metal',
+        gender: 'women',
+        frameType: 'full-rim',
+        isBestSeller: true,
         widthMm: 132,
         bridgeMm: 20,
         armMm: 140,
@@ -62,6 +77,13 @@ export class ProductsService implements OnModuleInit {
         nameAr: 'Noir Sun',
         nameEn: 'Noir Sun',
         basePriceMinorUnits: 6200,
+        sku: 'NRS-001',
+        shape: 'aviator',
+        material: 'metal',
+        gender: 'men',
+        frameType: 'full-rim',
+        isBestSeller: true,
+        isFeatured: true,
         widthMm: 140,
         bridgeMm: 19,
         armMm: 145,
@@ -82,35 +104,74 @@ export class ProductsService implements OnModuleInit {
 
   private async toDto(product: Product, currencyCode: string) {
     const price = await this.currency.convertFromBaseMinorUnits(product.basePriceMinorUnits, currencyCode);
+    const compareAt = product.compareAtPriceMinorUnits
+      ? await this.currency.convertFromBaseMinorUnits(product.compareAtPriceMinorUnits, currencyCode)
+      : null;
     return {
       id: product.id,
+      sku: product.sku,
       nameAr: product.nameAr,
       nameEn: product.nameEn,
       descriptionAr: product.descriptionAr,
       descriptionEn: product.descriptionEn,
       price,
+      compareAtPrice: compareAt,
+      discountPercent: compareAt && compareAt > price ? Math.round((1 - price / compareAt) * 100) : 0,
       currency: currencyCode,
       widthMm: product.widthMm,
       bridgeMm: product.bridgeMm,
       armMm: product.armMm,
+      shape: product.shape,
+      material: product.material,
+      gender: product.gender,
+      frameType: product.frameType,
+      model3dUrl: product.model3dUrl,
+      modelUsdzUrl: product.modelUsdzUrl,
+      modelPosterUrl: product.modelPosterUrl,
+      view360Images: product.view360Images ?? [],
+      isFeatured: product.isFeatured,
+      isNew: product.isNew,
+      isBestSeller: product.isBestSeller,
       rating: Number(product.rating),
       ratingCount: product.ratingCount,
-      category: product.category ? { id: product.category.id, nameAr: product.category.nameAr, nameEn: product.category.nameEn } : null,
-      brand: product.brand ? { id: product.brand.id, name: product.brand.name } : null,
-      images: product.images?.sort((a, b) => a.sortOrder - b.sortOrder).map((i) => ({ id: i.id, url: i.url })) ?? [],
-      variants: product.variants?.map((v) => ({ id: v.id, colorNameAr: v.colorNameAr, colorNameEn: v.colorNameEn, colorHex: v.colorHex, stock: v.stock })) ?? [],
+      createdAt: product.createdAt,
+      category: product.category
+        ? { id: product.category.id, nameAr: product.category.nameAr, nameEn: product.category.nameEn, imageUrl: product.category.imageUrl }
+        : null,
+      brand: product.brand ? { id: product.brand.id, name: product.brand.name, nameAr: product.brand.nameAr, logoUrl: product.brand.logoUrl } : null,
+      images: [...(product.images ?? [])].sort((a, b) => a.sortOrder - b.sortOrder).map((i) => ({ id: i.id, url: i.url })),
+      variants:
+        product.variants?.map((v) => ({ id: v.id, sku: v.sku, colorNameAr: v.colorNameAr, colorNameEn: v.colorNameEn, colorHex: v.colorHex, imageUrl: v.imageUrl, model3dUrl: v.model3dUrl, modelUsdzUrl: v.modelUsdzUrl, stock: v.stock })) ?? [],
     };
   }
 
   async findAll(filters: FindProductsDto) {
     const currencyCode = filters.currency ?? this.config.get<string>('DEFAULT_CURRENCY', 'YER');
-    const where: Record<string, unknown> = { isActive: true };
-    if (filters.categoryId) where.category = { id: filters.categoryId };
-    if (filters.brandId) where.brand = { id: filters.brandId };
-    if (filters.search) where.nameEn = ILike(`%${filters.search}%`);
+    const base: FindOptionsWhere<Product> = { isActive: true };
+    if (filters.categoryId) base.category = { id: filters.categoryId };
+    if (filters.brandId) base.brand = { id: filters.brandId };
+    for (const key of ['gender', 'shape', 'material', 'isFeatured', 'isNew', 'isBestSeller'] as const) {
+      if (filters[key] !== undefined) Object.assign(base, { [key]: filters[key] });
+    }
+    if (filters.minPrice !== undefined || filters.maxPrice !== undefined) {
+      const min = filters.minPrice !== undefined ? await this.currency.toBaseMinorUnits(filters.minPrice, currencyCode) : 0;
+      const max = filters.maxPrice !== undefined ? await this.currency.toBaseMinorUnits(filters.maxPrice, currencyCode) : 2147483647;
+      base.basePriceMinorUnits = Between(min, max);
+    }
 
-    const products = await this.repo.find({ where });
-    return Promise.all(products.map((p) => this.toDto(p, currencyCode)));
+    const where: FindOptionsWhere<Product>[] = filters.search
+      ? ['nameEn', 'nameAr', 'sku'].map((col) => ({ ...base, [col]: ILike(`%${filters.search}%`) }))
+      : [base];
+
+    const orders: Record<string, FindOptionsOrder<Product>> = {
+      newest: { createdAt: 'DESC' },
+      price_asc: { basePriceMinorUnits: 'ASC' },
+      price_desc: { basePriceMinorUnits: 'DESC' },
+      rating: { rating: 'DESC', ratingCount: 'DESC' },
+      popular: { ratingCount: 'DESC' },
+    };
+    const [products, total] = await this.repo.findAndCount({ where, order: orders[filters.sort ?? 'newest'], ...pageOpts(filters) });
+    return new Paged(await Promise.all(products.map((p) => this.toDto(p, currencyCode))), total);
   }
 
   async findOne(id: string, currencyCode?: string) {

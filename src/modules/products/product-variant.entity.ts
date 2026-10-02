@@ -16,6 +16,21 @@ export class ProductVariant {
   @Column({ name: 'color_hex' })
   colorHex: string;
 
+  @Column({ type: 'varchar', nullable: true })
+  sku: string | null;
+
+  @Column({ name: 'image_url', type: 'varchar', nullable: true })
+  imageUrl: string | null;
+
+  @Column({ name: 'model_asset_id', type: 'uuid', nullable: true })
+  modelAssetId: string | null;
+
+  @Column({ name: 'model_3d_url', type: 'varchar', nullable: true })
+  model3dUrl: string | null;
+
+  @Column({ name: 'model_usdz_url', type: 'varchar', nullable: true })
+  modelUsdzUrl: string | null;
+
   @Column({ type: 'int', default: 0 })
   stock: number;
 

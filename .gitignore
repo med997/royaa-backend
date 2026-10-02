@@ -5,3 +5,6 @@ dist/
 coverage/
 .idea/
 *.tsbuildinfo
+public/uploads/*
+!public/uploads/.gitkeep
+storage/

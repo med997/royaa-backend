@@ -1,7 +1,11 @@
 import { Controller, Get } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { CurrencyService } from '../currency/currency.service.js';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiErrors, ApiOk } from '../../common/swagger/api-response.js';
+import { AppConfigModel } from '../../common/swagger/response-models.js';
 
+@ApiTags('النظام')
 @Controller('config')
 export class AppConfigController {
   constructor(
@@ -10,6 +14,8 @@ export class AppConfigController {
   ) {}
 
   @Get()
+  @ApiOperation({ summary: 'إعدادات التطبيق', description: 'يُرجع اللغات والعملات المفعّلة والافتراضية. لا يتطلب مصادقة.' })
+  @ApiOk(AppConfigModel, 'الإعدادات العامة')
   async getConfig() {
     const currencies = await this.currency.findActive();
     return {

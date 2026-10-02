@@ -15,6 +15,14 @@ import { AddressesModule } from './modules/addresses/addresses.module.js';
 import { OrdersModule } from './modules/orders/orders.module.js';
 import { NotificationsModule } from './modules/notifications/notifications.module.js';
 import { ReviewsModule } from './modules/reviews/reviews.module.js';
+import { PrescriptionsModule } from './modules/prescriptions/prescriptions.module.js';
+import { MeasurementsModule } from './modules/measurements/measurements.js';
+import { BannersModule } from './modules/banners/banners.js';
+import { ContentModule } from './modules/content/content.js';
+import { StoresModule } from './modules/stores/stores.js';
+import { CouponsModule } from './modules/coupons/coupons.js';
+import { SupportModule } from './modules/support/support.js';
+import { AdminModule } from './modules/admin/admin.module.js';
 import { AppController } from './app.controller.js';
 
 @Module({
@@ -50,6 +58,14 @@ import { AppController } from './app.controller.js';
     OrdersModule,
     NotificationsModule,
     ReviewsModule,
+    PrescriptionsModule,
+    MeasurementsModule,
+    BannersModule,
+    ContentModule,
+    StoresModule,
+    CouponsModule,
+    SupportModule,
+    AdminModule,
   ],
   controllers: [AppController],
 })
